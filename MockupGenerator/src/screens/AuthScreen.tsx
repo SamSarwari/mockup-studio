@@ -10,15 +10,16 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, OAuthProvider } from '../contexts/AuthContext';
 
 export const AuthScreen: React.FC = () => {
-  const { signIn, signUp, continueAsGuest } = useAuth();
+  const { signIn, signUp, signInWithOAuth, continueAsGuest } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<OAuthProvider | null>(null);
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) return;
@@ -30,9 +31,20 @@ export const AuthScreen: React.FC = () => {
         await signIn(email.trim(), password);
       }
     } catch {
-      // Error is handled in AuthContext via Alert
+      // Handled in AuthContext
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSocialAuth = async (provider: OAuthProvider) => {
+    setSocialLoading(provider);
+    try {
+      await signInWithOAuth(provider);
+    } catch {
+      // Handled in AuthContext
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -52,8 +64,69 @@ export const AuthScreen: React.FC = () => {
           </View>
           <Text style={styles.title}>Mockup Studio</Text>
           <Text style={styles.subtitle}>
-            {isSignUp ? 'Erstelle dein Konto' : 'Willkommen zurück'}
+            {isSignUp ? 'Erstelle dein Konto' : 'Melde dich an, um Mockups & Presets zu synchronisieren'}
           </Text>
+        </View>
+
+        {/* Social Logins */}
+        <View style={styles.socialContainer}>
+          {/* Apple Button */}
+          <TouchableOpacity
+            style={styles.socialBtnApple}
+            onPress={() => handleSocialAuth('apple')}
+            disabled={socialLoading !== null || loading}
+            activeOpacity={0.85}
+          >
+            {socialLoading === 'apple' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View style={styles.socialBtnInner}>
+                <Text style={styles.socialIcon}></Text>
+                <Text style={styles.socialBtnAppleText}>Mit Apple anmelden</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Google Button */}
+          <TouchableOpacity
+            style={styles.socialBtnGoogle}
+            onPress={() => handleSocialAuth('google')}
+            disabled={socialLoading !== null || loading}
+            activeOpacity={0.85}
+          >
+            {socialLoading === 'google' ? (
+              <ActivityIndicator color="#0F172A" size="small" />
+            ) : (
+              <View style={styles.socialBtnInner}>
+                <Text style={styles.googleIconText}>G</Text>
+                <Text style={styles.socialBtnGoogleText}>Mit Google anmelden</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* GitHub Button */}
+          <TouchableOpacity
+            style={styles.socialBtnGithub}
+            onPress={() => handleSocialAuth('github')}
+            disabled={socialLoading !== null || loading}
+            activeOpacity={0.85}
+          >
+            {socialLoading === 'github' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View style={styles.socialBtnInner}>
+                <Text style={styles.socialIcon}>🐙</Text>
+                <Text style={styles.socialBtnGithubText}>Mit GitHub anmelden</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>ODER MIT E-MAIL</Text>
+          <View style={styles.dividerLine} />
         </View>
 
         {/* Form Card */}
@@ -153,21 +226,22 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
+    paddingTop: 40,
     paddingBottom: 40,
   },
   branding: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
     shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -175,25 +249,115 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconEmoji: {
-    fontSize: 32,
+    fontSize: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.6,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#64748B',
     marginTop: 4,
     fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  socialContainer: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  socialBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  socialIcon: {
+    fontSize: 18,
+  },
+  googleIconText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#4285F4',
+  },
+  socialBtnApple: {
+    backgroundColor: '#000000',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  socialBtnAppleText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  socialBtnGoogle: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  socialBtnGoogleText: {
+    color: '#1E293B',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  socialBtnGithub: {
+    backgroundColor: '#24292F',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#24292F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  socialBtnGithubText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 22,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.04)',
     shadowColor: '#64748B',
@@ -201,7 +365,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 16,
     elevation: 2,
-    gap: 16,
+    gap: 14,
   },
   inputGroup: {
     gap: 6,
@@ -218,7 +382,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 13,
     fontSize: 15,
     color: '#0F172A',
     fontWeight: '500',
@@ -248,7 +412,7 @@ const styles = StyleSheet.create({
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 18,
   },
   toggleText: {
     fontSize: 14,
@@ -262,8 +426,8 @@ const styles = StyleSheet.create({
   },
   guestBtn: {
     alignItems: 'center',
-    marginTop: 18,
-    paddingVertical: 10,
+    marginTop: 16,
+    paddingVertical: 8,
   },
   guestBtnText: {
     fontSize: 14,

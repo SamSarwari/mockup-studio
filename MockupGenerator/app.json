@@ -36,7 +36,8 @@
         {
           "photosPermission": "Allow MockupGenerator to access your photos to create mockups."
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }

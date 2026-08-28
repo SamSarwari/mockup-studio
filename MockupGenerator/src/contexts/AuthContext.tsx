@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from '../lib/supabase';
+
+WebBrowser.maybeCompleteAuthSession();
+
+export type OAuthProvider = 'google' | 'apple' | 'github';
 
 interface AuthContextType {
   session: Session | null;
@@ -10,6 +16,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
 }
@@ -21,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   signUp: async () => {},
+  signInWithOAuth: async () => {},
   signOut: async () => {},
   continueAsGuest: () => {},
 });
@@ -105,6 +113,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, []);
 
+  const signInWithOAuth = useCallback(async (provider: OAuthProvider) => {
+    try {
+      if (Platform.OS === 'web') {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+          },
+        });
+        if (error) throw error;
+      } else {
+        const redirectUrl = makeRedirectUri({
+          preferLocalhost: true,
+        });
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: redirectUrl,
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+          if (res.type === 'success' && res.url) {
+            const urlObj = new URL(res.url);
+            const code = urlObj.searchParams.get('code');
+            if (code) {
+              await supabase.auth.exchangeCodeForSession(code);
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      const friendlyMsg = formatAuthError(err);
+      Alert.alert(`${provider.toUpperCase()} Anmeldung`, friendlyMsg);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     setIsGuest(false);
     const { error } = await supabase.auth.signOut();
@@ -122,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         signIn,
         signUp,
+        signInWithOAuth,
         signOut,
         continueAsGuest,
       }}

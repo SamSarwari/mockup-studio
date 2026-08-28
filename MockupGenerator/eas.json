@@ -40,7 +40,8 @@
     "production": {
       "ios": {
         "appleId": "samprogrammiert@gmail.com",
-        "appleTeamId": "66GZ2B24DC"
+        "appleTeamId": "66GZ2B24DC",
+        "ascAppId": "6806347212"
       },
       "android": {
         "serviceAccountKeyPath": "./google-services-key.json",

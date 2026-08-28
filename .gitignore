@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+MockupGenerator/node_modules/
+
+# Expo & Build Artifacts
+.expo/
+MockupGenerator/.expo/
+dist/
+web-build/
+expo-env.d.ts
+.kotlin/
+*.orig.*
+
+# Logs & Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.metro-health-check*
+
+# macOS
+.DS_Store
+*.pem
+
+# Environment & Config
+.env*.local
+*.tsbuildinfo
+
+# Native build folders (managed workflow)
+MockupGenerator/ios/
+MockupGenerator/android/

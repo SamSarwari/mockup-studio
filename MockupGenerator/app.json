@@ -30,9 +30,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
@@ -56,6 +56,12 @@
           "photosPermission": "Allow Mockup Studio to access your photos to select screenshots for mockups."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "841ee9f8-a566-42a3-ab96-3be14556d87f"
+      }
+    },
+    "owner": "samsarwaris-team"
   }
 }

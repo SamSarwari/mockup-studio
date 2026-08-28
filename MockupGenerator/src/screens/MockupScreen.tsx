@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,19 +8,20 @@ import {
   Switch,
   StatusBar,
   TouchableOpacity,
-  Alert,
   TextInput,
   Modal,
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MockupCanvas } from '../components/MockupCanvas';
 import { BackgroundPicker } from '../components/BackgroundPicker';
 import { ChassisPicker } from '../components/ChassisPicker';
 import { ScreenshotPicker } from '../components/ScreenshotPicker';
 import { ExportButton } from '../components/ExportButton';
 import { PresetList } from '../components/PresetList';
+import { AuthScreen } from './AuthScreen';
 import { DEFAULT_DEVICE } from '../config/devices';
 import { DEFAULT_BACKGROUND } from '../utils/colors';
 import { DEFAULT_CHASSIS_COLOR } from '../utils/chassisColors';
@@ -32,6 +33,10 @@ import { useSavePreset } from '../hooks/usePresets';
 const EXPORT_W = 540;
 const EXPORT_H = 960;
 const EXPORT_PADDING = 70;
+
+const STORAGE_KEY_BG = 'MOCKUP_STUDIO_PREF_BG';
+const STORAGE_KEY_CHASSIS = 'MOCKUP_STUDIO_PREF_CHASSIS';
+const STORAGE_KEY_ISLAND = 'MOCKUP_STUDIO_PREF_ISLAND';
 
 export const MockupScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
@@ -45,10 +50,61 @@ export const MockupScreen: React.FC = () => {
   const [chassisColor, setChassisColor] = useState<ChassisColor>(DEFAULT_CHASSIS_COLOR);
   const [showDynamicIsland, setShowDynamicIsland] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [authModalVisible, setAuthModalVisible] = useState(false);
 
   const device = DEFAULT_DEVICE;
   const isTransparent = backgroundColor === 'transparent';
   const previewCanvasHeight = Math.min(540, Math.max(380, Math.floor(height * 0.52)));
+
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
+  const [presetNameInput, setPresetNameInput] = useState('');
+
+  // 1. Load saved preferences from AsyncStorage on startup
+  useEffect(() => {
+    async function loadSavedPreferences() {
+      try {
+        const [savedBg, savedChassis, savedIsland] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_BG),
+          AsyncStorage.getItem(STORAGE_KEY_CHASSIS),
+          AsyncStorage.getItem(STORAGE_KEY_ISLAND),
+        ]);
+
+        if (savedBg) {
+          setBackgroundColor(savedBg);
+        }
+        if (savedChassis) {
+          try {
+            setChassisColor(JSON.parse(savedChassis));
+          } catch {}
+        }
+        if (savedIsland !== null) {
+          try {
+            setShowDynamicIsland(JSON.parse(savedIsland));
+          } catch {}
+        }
+      } catch (err) {
+        console.warn('Could not load user preferences:', err);
+      }
+    }
+
+    loadSavedPreferences();
+  }, []);
+
+  // 2. Persistent preference setters
+  const handleBackgroundChange = (color: string) => {
+    setBackgroundColor(color);
+    AsyncStorage.setItem(STORAGE_KEY_BG, color).catch(() => {});
+  };
+
+  const handleChassisChange = (color: ChassisColor) => {
+    setChassisColor(color);
+    AsyncStorage.setItem(STORAGE_KEY_CHASSIS, JSON.stringify(color)).catch(() => {});
+  };
+
+  const handleToggleDynamicIsland = (val: boolean) => {
+    setShowDynamicIsland(val);
+    AsyncStorage.setItem(STORAGE_KEY_ISLAND, JSON.stringify(val)).catch(() => {});
+  };
 
   const handleScreenshotSelected = useCallback(async (info: ScreenshotInfo) => {
     setLoading(true);
@@ -56,31 +112,17 @@ export const MockupScreen: React.FC = () => {
     setLoading(false);
   }, []);
 
-  const [isSavingPreset, setIsSavingPreset] = useState(false);
-  const [presetNameInput, setPresetNameInput] = useState('');
-
   const handleApplyPreset = useCallback((preset: {
     chassisColor: ChassisColor;
     backgroundColor: string;
     showDynamicIsland: boolean;
   }) => {
-    setChassisColor(preset.chassisColor);
-    setBackgroundColor(preset.backgroundColor);
-    setShowDynamicIsland(preset.showDynamicIsland);
+    handleChassisChange(preset.chassisColor);
+    handleBackgroundChange(preset.backgroundColor);
+    handleToggleDynamicIsland(preset.showDynamicIsland);
   }, []);
 
   const handleOpenSavePreset = () => {
-    if (!user) {
-      Alert.alert(
-        'Anmeldung erforderlich',
-        'Erstelle ein kostenloses Konto oder melde dich an, um Presets in der Cloud zu speichern.',
-        [
-          { text: 'Später', style: 'cancel' },
-          { text: 'Anmelden', onPress: signOut },
-        ]
-      );
-      return;
-    }
     setPresetNameInput(`${chassisColor.name} · ${isTransparent ? 'Transparent' : backgroundColor}`);
     setIsSavingPreset(true);
   };
@@ -96,11 +138,32 @@ export const MockupScreen: React.FC = () => {
     setIsSavingPreset(false);
   };
 
-  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
+  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || null;
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F9FD" />
+
+      {/* Auth Modal (Optional - when user taps profile) */}
+      <Modal
+        visible={authModalVisible && !user}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setAuthModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalRoot}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setAuthModalVisible(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.modalCloseText}>Schließen ✕</Text>
+            </TouchableOpacity>
+          </View>
+          <AuthScreen />
+        </SafeAreaView>
+      </Modal>
 
       {/* Save Preset Modal */}
       <Modal
@@ -181,13 +244,29 @@ export const MockupScreen: React.FC = () => {
                   <Text style={styles.proBadgeText}>PRO</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.userChip} onPress={signOut} activeOpacity={0.8}>
-                <View style={styles.userAvatar}>
-                  <Text style={styles.userAvatarText}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+
+              {/* User Account / Profile Button */}
+              {user ? (
+                <TouchableOpacity
+                  style={styles.userChip}
+                  onPress={signOut}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.userAvatar}>
+                    <Text style={styles.userAvatarText}>
+                      {displayName ? displayName.charAt(0).toUpperCase() : '✓'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.loginChip}
+                  onPress={() => setAuthModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.loginChipText}>👤 Anmelden</Text>
+                </TouchableOpacity>
+              )}
             </View>
             <Text style={styles.headerSubtitle}>
               {device.name} · {chassisColor.name}
@@ -237,12 +316,12 @@ export const MockupScreen: React.FC = () => {
             <PresetList onApply={handleApplyPreset} />
 
             {/* 3. iPhone Finish Color */}
-            <ChassisPicker selected={chassisColor} onChange={setChassisColor} />
+            <ChassisPicker selected={chassisColor} onChange={handleChassisChange} />
 
             <View style={styles.divider} />
 
             {/* 4. Background Swatches */}
-            <BackgroundPicker selectedColor={backgroundColor} onColorChange={setBackgroundColor} />
+            <BackgroundPicker selectedColor={backgroundColor} onColorChange={handleBackgroundChange} />
 
             <View style={styles.divider} />
 
@@ -254,7 +333,7 @@ export const MockupScreen: React.FC = () => {
               </View>
               <Switch
                 value={showDynamicIsland}
-                onValueChange={setShowDynamicIsland}
+                onValueChange={handleToggleDynamicIsland}
                 trackColor={{ false: '#E2E8F0', true: '#6366F1' }}
                 thumbColor="#FFFFFF"
                 ios_backgroundColor="#E2E8F0"
@@ -308,6 +387,26 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 48,
+  },
+  modalRoot: {
+    flex: 1,
+    backgroundColor: '#F8F9FD',
+  },
+  modalHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    alignItems: 'flex-end',
+  },
+  modalCloseBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+  },
+  modalCloseText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
   },
   exportWrapper: {
     position: 'absolute',
@@ -363,6 +462,19 @@ const styles = StyleSheet.create({
   userAvatarText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '700',
+  },
+  loginChip: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  loginChipText: {
+    color: '#6366F1',
+    fontSize: 13,
     fontWeight: '700',
   },
   headerSubtitle: {

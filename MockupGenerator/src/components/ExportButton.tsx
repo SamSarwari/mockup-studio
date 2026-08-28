@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -10,6 +10,7 @@ import {
 import { ScreenshotInfo, DeviceConfig, ChassisColor } from '../types';
 import { exportMockupAsPng, saveToGallery, shareImage } from '../services/exportService';
 import { useLogExport } from '../hooks/useExportHistory';
+import { Toast } from './Toast';
 
 interface ExportButtonProps {
   screenshot: ScreenshotInfo | null;
@@ -28,8 +29,9 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   showDynamicIsland,
   viewRef,
 }) => {
-  const [exporting, setExporting] = React.useState(false);
-  const isTransparent = backgroundColor === 'transparent';
+  const [exporting, setExporting] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const logExport = useLogExport();
 
   const handleExport = async () => {
@@ -61,24 +63,24 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
 
       const actions = [
         {
-          text: '📷  In Fotomediathek',
+          text: '📷  In Fotomediathek speichern',
           onPress: async () => {
             const saved = await saveToGallery(uri);
             if (saved) {
-              Alert.alert(
-                '✅ Gespeichert',
-                isTransparent
-                  ? 'PNG gespeichert! Hinweis: Apple Fotos stellt transparente Bilder mit dunklem Hintergrund dar – die Freistellung ist aber 100% transparent. Nutze "Teilen" für Canva, Figma oder Messenger.'
-                  : 'Das hochauflösende Mockup wurde in deiner Fotomediathek gespeichert.'
-              );
+              setToastMessage('In Fotomediathek gespeichert ✓');
+              setToastVisible(true);
             } else {
-              Alert.alert('Fehler', 'Berechtigung für Fotomediathek verweigert.');
+              Alert.alert('Hinweis', 'Zugriff auf Fotos wurde nicht gewährt.');
             }
           },
         },
         {
           text: '🔗  Teilen / In Dateien sichern',
-          onPress: () => shareImage(uri),
+          onPress: async () => {
+            await shareImage(uri);
+            setToastMessage('Export abgeschlossen ✓');
+            setToastVisible(true);
+          },
         },
         {
           text: 'Abbrechen',
@@ -98,24 +100,33 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   const disabled = !screenshot || exporting;
 
   return (
-    <TouchableOpacity
-      style={[styles.button, disabled ? styles.buttonDisabled : styles.buttonActive]}
-      onPress={handleExport}
-      disabled={disabled}
-      activeOpacity={0.85}
-      accessibilityLabel="Als PNG exportieren"
-    >
-      {exporting ? (
-        <ActivityIndicator color="#FFFFFF" />
-      ) : (
-        <View style={styles.buttonInner}>
-          <Text style={styles.icon}>✨</Text>
-          <Text style={[styles.buttonText, disabled && styles.buttonTextDisabled]}>
-            Ultra-HD PNG exportieren
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        style={[styles.button, disabled ? styles.buttonDisabled : styles.buttonActive]}
+        onPress={handleExport}
+        disabled={disabled}
+        activeOpacity={0.85}
+        accessibilityLabel="Als PNG exportieren"
+      >
+        {exporting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <View style={styles.buttonInner}>
+            <Text style={styles.icon}>✨</Text>
+            <Text style={[styles.buttonText, disabled && styles.buttonTextDisabled]}>
+              Ultra-HD PNG exportieren
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        icon="✨"
+        onDismiss={() => setToastVisible(false)}
+      />
+    </>
   );
 };
 
@@ -160,4 +171,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

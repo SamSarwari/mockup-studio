@@ -35,9 +35,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    // Get initial session and securely verify with Supabase auth server
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+          setSession(null);
+        } else {
+          setSession(session);
+        }
+      } else {
+        setSession(null);
+      }
+      setLoading(false);
+    }).catch(() => {
+      setSession(null);
       setLoading(false);
     });
 

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { AuthCredentialsSchema, PasswordResetSchema } from '../utils/validation';
 
 export const AuthScreen: React.FC = () => {
   const { signIn, signUp, resetPassword, continueAsGuest } = useAuth();
@@ -27,26 +28,27 @@ export const AuthScreen: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!email.trim()) {
-      setErrorMessage('Bitte gib deine E-Mail-Adresse ein.');
+    const validationResult = AuthCredentialsSchema.safeParse({
+      email,
+      password,
+      displayName: isSignUp ? displayName : undefined,
+    });
+
+    if (!validationResult.success) {
+      const firstIssue = validationResult.error.issues[0]?.message || 'Ungültige Eingabe.';
+      setErrorMessage(firstIssue);
       return;
     }
-    if (!password.trim()) {
-      setErrorMessage('Bitte gib dein Passwort ein.');
-      return;
-    }
-    if (password.length < 6) {
-      setErrorMessage('Das Passwort muss mindestens 6 Zeichen lang sein.');
-      return;
-    }
+
+    const validData = validationResult.data;
 
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUp(email.trim(), password, displayName.trim() || undefined);
+        await signUp(validData.email, validData.password, validData.displayName || undefined);
         setSuccessMessage('Konto erfolgreich erstellt! Du wirst angemeldet...');
       } else {
-        await signIn(email.trim(), password);
+        await signIn(validData.email, validData.password);
         setSuccessMessage('Erfolgreich angemeldet!');
       }
     } catch (err: any) {
@@ -67,15 +69,17 @@ export const AuthScreen: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    if (!email.trim()) {
-      setErrorMessage('Bitte gib oben deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen.');
+    const validationResult = PasswordResetSchema.safeParse({ email });
+    if (!validationResult.success) {
+      const firstIssue = validationResult.error.issues[0]?.message || 'Bitte eine gültige E-Mail eingeben.';
+      setErrorMessage(firstIssue);
       return;
     }
 
     setResetLoading(true);
     try {
-      await resetPassword(email.trim());
-      setSuccessMessage(`Ein Link zum Zurücksetzen deines Passworts wurde an ${email.trim()} gesendet! ✉️`);
+      await resetPassword(validationResult.data.email);
+      setSuccessMessage(`Ein Link zum Zurücksetzen deines Passworts wurde an ${validationResult.data.email} gesendet! ✉️`);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Fehler beim Zurücksetzen des Passworts.');
     } finally {

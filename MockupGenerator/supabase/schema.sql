@@ -16,9 +16,14 @@ CREATE POLICY "Users can read own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 -- 2. Presets Table (Saved Mockup configurations)
 CREATE TABLE IF NOT EXISTS public.presets (
@@ -44,11 +49,14 @@ CREATE POLICY "Users can insert own presets"
 
 CREATE POLICY "Users can update own presets"
   ON public.presets FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own presets"
   ON public.presets FOR DELETE
   USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_presets_user_id ON public.presets(user_id);
 
 -- 3. Export History Table (Log of generated mockups)
 CREATE TABLE IF NOT EXISTS public.export_history (
@@ -70,15 +78,23 @@ CREATE POLICY "Users can insert into own export history"
   ON public.export_history FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+CREATE INDEX IF NOT EXISTS idx_export_history_user_id ON public.export_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_export_history_exported_at ON public.export_history(exported_at DESC);
+
 -- 4. Trigger: Automatically create a profile when a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, display_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)));
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)))
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Drop trigger if already exists and recreate
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

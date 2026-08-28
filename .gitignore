@@ -22,7 +22,15 @@ yarn-error.*
 *.pem
 
 # Environment & Config
+.env
+.env.*
+.env.local
+.env.production
 .env*.local
+MockupGenerator/.env
+MockupGenerator/.env.*
+MockupGenerator/.env.local
+MockupGenerator/.env.production
 *.tsbuildinfo
 
 # Native build folders (managed workflow)

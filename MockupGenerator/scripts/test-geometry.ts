@@ -6,8 +6,8 @@ console.log('--- Testing Geometry & Mockup Calculations ---');
 // Test Chassis size
 const chassis = getChassisSize(IPHONE_17_PRO_MAX);
 console.log(`Chassis Size: ${chassis.width} x ${chassis.height} pt (Display: ${IPHONE_17_PRO_MAX.displayWidth} x ${IPHONE_17_PRO_MAX.displayHeight})`);
-console.assert(chassis.width === 468, 'Chassis width should be 440 + 2*14 = 468');
-console.assert(chassis.height === 984, 'Chassis height should be 956 + 2*14 = 984');
+console.assert(chassis.width === 460, 'Chassis width should be 440 + 2*10 = 460');
+console.assert(chassis.height === 976, 'Chassis height should be 956 + 2*10 = 976');
 
 // Test Preview Scaling for various screen widths/heights
 const preview = scaleDeviceToPreview(IPHONE_17_PRO_MAX, 390, 500, 16);

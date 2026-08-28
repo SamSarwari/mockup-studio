@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { PRESET_COLORS } from '../utils/colors';
+import { ColorSchema } from '../utils/validation';
 
 interface BackgroundPickerProps {
   selectedColor: string;
@@ -23,9 +24,11 @@ export const BackgroundPicker: React.FC<BackgroundPickerProps> = ({
   const [customHex, setCustomHex] = useState('');
 
   const handleCustomSubmit = () => {
-    const hex = customHex.startsWith('#') ? customHex : `#${customHex}`;
-    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-      onColorChange(hex);
+    const raw = customHex.trim();
+    const hex = raw.startsWith('#') ? raw : `#${raw}`;
+    const result = ColorSchema.safeParse(hex);
+    if (result.success) {
+      onColorChange(result.data);
       setShowCustomInput(false);
       setCustomHex('');
     } else {

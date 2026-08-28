@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { LogExportInputSchema, ExportRecordListSchema } from '../utils/validation';
 
 export interface ExportRecord {
   id: string;
   user_id: string;
-  chassis_color_name: string;
-  background_color: string;
-  show_dynamic_island: boolean;
+  chassis_color_name?: string | null;
+  background_color?: string | null;
+  show_dynamic_island?: boolean | null;
   exported_at: string;
 }
 
@@ -34,7 +35,12 @@ export function useExportHistory() {
         .limit(50);
 
       if (error) throw error;
-      return data ?? [];
+      const parsed = ExportRecordListSchema.safeParse(data);
+      if (!parsed.success) {
+        console.warn('Export history schema validation warning:', parsed.error);
+        return (data as ExportRecord[]) ?? [];
+      }
+      return parsed.data;
     },
     enabled: !!user,
   });
@@ -45,15 +51,19 @@ export function useLogExport() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: LogExportInput) => {
+    mutationFn: async (rawInput: LogExportInput) => {
       if (!user) throw new Error('Not authenticated');
+      
+      // Validate input before sending to Supabase
+      const validated = LogExportInputSchema.parse(rawInput);
+
       const { error } = await supabase
         .from('export_history')
         .insert({
           user_id: user.id,
-          chassis_color_name: input.chassisColorName,
-          background_color: input.backgroundColor,
-          show_dynamic_island: input.showDynamicIsland,
+          chassis_color_name: validated.chassisColorName,
+          background_color: validated.backgroundColor,
+          show_dynamic_island: validated.showDynamicIsland,
         });
 
       if (error) throw error;

@@ -20,29 +20,57 @@ export const AuthScreen: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<OAuthProvider | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!email.trim() || !password.trim()) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    if (!email.trim()) {
+      setErrorMessage('Bitte gib deine E-Mail-Adresse ein.');
+      return;
+    }
+    if (!password.trim()) {
+      setErrorMessage('Bitte gib dein Passwort ein.');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMessage('Das Passwort muss mindestens 6 Zeichen lang sein.');
+      return;
+    }
+
     setLoading(true);
     try {
       if (isSignUp) {
         await signUp(email.trim(), password, displayName.trim() || undefined);
+        setSuccessMessage('Konto erfolgreich erstellt! Du wirst angemeldet...');
       } else {
         await signIn(email.trim(), password);
+        setSuccessMessage('Erfolgreich angemeldet!');
       }
-    } catch {
-      // Handled in AuthContext
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (msg.includes('Invalid login credentials')) {
+        setErrorMessage('E-Mail oder Passwort ist nicht korrekt. Falls du noch kein Konto hast, tippe oben auf "Registrieren".');
+      } else if (msg.includes('User already registered')) {
+        setErrorMessage('Ein Konto mit dieser E-Mail existiert bereits. Bitte tippe auf "Anmelden".');
+      } else {
+        setErrorMessage(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleSocialAuth = async (provider: OAuthProvider) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
     setSocialLoading(provider);
     try {
       await signInWithOAuth(provider);
-    } catch {
-      // Handled in AuthContext
+    } catch (err: any) {
+      setErrorMessage(`${provider.toUpperCase()} Anmeldung fehlgeschlagen: ${err?.message || err}`);
     } finally {
       setSocialLoading(null);
     }
@@ -64,76 +92,61 @@ export const AuthScreen: React.FC = () => {
           </View>
           <Text style={styles.title}>Mockup Studio</Text>
           <Text style={styles.subtitle}>
-            {isSignUp ? 'Erstelle dein Konto' : 'Melde dich an, um Mockups & Presets zu synchronisieren'}
+            Melde dich an, um Mockup-Presets & Export-Historie zu speichern
           </Text>
-        </View>
-
-        {/* Social Logins */}
-        <View style={styles.socialContainer}>
-          {/* Apple Button */}
-          <TouchableOpacity
-            style={styles.socialBtnApple}
-            onPress={() => handleSocialAuth('apple')}
-            disabled={socialLoading !== null || loading}
-            activeOpacity={0.85}
-          >
-            {socialLoading === 'apple' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.socialBtnInner}>
-                <Text style={styles.socialIcon}></Text>
-                <Text style={styles.socialBtnAppleText}>Mit Apple anmelden</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Google Button */}
-          <TouchableOpacity
-            style={styles.socialBtnGoogle}
-            onPress={() => handleSocialAuth('google')}
-            disabled={socialLoading !== null || loading}
-            activeOpacity={0.85}
-          >
-            {socialLoading === 'google' ? (
-              <ActivityIndicator color="#0F172A" size="small" />
-            ) : (
-              <View style={styles.socialBtnInner}>
-                <Text style={styles.googleIconText}>G</Text>
-                <Text style={styles.socialBtnGoogleText}>Mit Google anmelden</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* GitHub Button */}
-          <TouchableOpacity
-            style={styles.socialBtnGithub}
-            onPress={() => handleSocialAuth('github')}
-            disabled={socialLoading !== null || loading}
-            activeOpacity={0.85}
-          >
-            {socialLoading === 'github' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.socialBtnInner}>
-                <Text style={styles.socialIcon}>🐙</Text>
-                <Text style={styles.socialBtnGithubText}>Mit GitHub anmelden</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ODER MIT E-MAIL</Text>
-          <View style={styles.dividerLine} />
         </View>
 
         {/* Form Card */}
         <View style={styles.card}>
+          {/* Top Segmented Tab Switcher */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, !isSignUp && styles.tabActive]}
+              onPress={() => {
+                setIsSignUp(false);
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, !isSignUp && styles.tabTextActive]}>
+                Anmelden
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, isSignUp && styles.tabActive]}
+              onPress={() => {
+                setIsSignUp(true);
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, isSignUp && styles.tabTextActive]}>
+                Registrieren
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Error Banner */}
+          {errorMessage && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorIcon}>⚠️</Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
+          {/* Success Banner */}
+          {successMessage && (
+            <View style={styles.successBox}>
+              <Text style={styles.successIcon}>✅</Text>
+              <Text style={styles.successText}>{successMessage}</Text>
+            </View>
+          )}
+
           {isSignUp && (
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Name</Text>
+              <Text style={styles.inputLabel}>Name (optional)</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Dein Name"
@@ -147,7 +160,7 @@ export const AuthScreen: React.FC = () => {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>E-Mail</Text>
+            <Text style={styles.inputLabel}>E-Mail-Adresse</Text>
             <TextInput
               style={styles.input}
               placeholder="name@beispiel.de"
@@ -165,7 +178,7 @@ export const AuthScreen: React.FC = () => {
             <Text style={styles.inputLabel}>Passwort</Text>
             <TextInput
               style={styles.input}
-              placeholder={isSignUp ? 'Mind. 6 Zeichen' : '••••••••'}
+              placeholder={isSignUp ? 'Mindestens 6 Zeichen' : '••••••••'}
               placeholderTextColor="#94A3B8"
               value={password}
               onChangeText={setPassword}
@@ -185,25 +198,48 @@ export const AuthScreen: React.FC = () => {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.submitBtnText}>
-                {isSignUp ? 'Konto erstellen' : 'Anmelden'}
+                {isSignUp ? 'Kostenloses Konto erstellen' : 'Jetzt anmelden'}
               </Text>
             )}
           </TouchableOpacity>
-        </View>
 
-        {/* Toggle */}
-        <TouchableOpacity
-          style={styles.toggleRow}
-          onPress={() => setIsSignUp((v) => !v)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.toggleText}>
-            {isSignUp ? 'Bereits ein Konto? ' : 'Noch kein Konto? '}
-          </Text>
-          <Text style={styles.toggleLink}>
-            {isSignUp ? 'Anmelden' : 'Registrieren'}
-          </Text>
-        </TouchableOpacity>
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ODER MIT SOCIAL LOGIN</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social Logins */}
+          <View style={styles.socialRow}>
+            <TouchableOpacity
+              style={styles.socialIconBtn}
+              onPress={() => handleSocialAuth('apple')}
+              disabled={socialLoading !== null || loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.socialEmoji}></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.socialIconBtn}
+              onPress={() => handleSocialAuth('google')}
+              disabled={socialLoading !== null || loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.googleEmoji}>G</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.socialIconBtn}
+              onPress={() => handleSocialAuth('github')}
+              disabled={socialLoading !== null || loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.socialEmoji}>🐙</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Guest Mode */}
         <TouchableOpacity
@@ -211,7 +247,7 @@ export const AuthScreen: React.FC = () => {
           onPress={continueAsGuest}
           activeOpacity={0.7}
         >
-          <Text style={styles.guestBtnText}>Als Gast fortfahren →</Text>
+          <Text style={styles.guestBtnText}>Ohne Anmeldung als Gast fortfahren →</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -227,21 +263,21 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 22,
-    paddingTop: 40,
+    paddingTop: 36,
     paddingBottom: 40,
   },
   branding: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 22,
   },
   iconCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -249,7 +285,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   iconEmoji: {
-    fontSize: 30,
+    fontSize: 28,
   },
   title: {
     fontSize: 26,
@@ -258,100 +294,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
     marginTop: 4,
     fontWeight: '500',
     textAlign: 'center',
-    paddingHorizontal: 12,
-  },
-  socialContainer: {
-    gap: 10,
-    marginBottom: 20,
-  },
-  socialBtnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  socialIcon: {
-    fontSize: 18,
-  },
-  googleIconText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#4285F4',
-  },
-  socialBtnApple: {
-    backgroundColor: '#000000',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  socialBtnAppleText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  socialBtnGoogle: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#64748B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  socialBtnGoogleText: {
-    color: '#1E293B',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  socialBtnGithub: {
-    backgroundColor: '#24292F',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#24292F',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  socialBtnGithubText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E2E8F0',
-  },
-  dividerText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.8,
+    paddingHorizontal: 16,
+    lineHeight: 18,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -366,6 +315,81 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 2,
     gap: 14,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  tabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  tabTextActive: {
+    color: '#0F172A',
+    fontWeight: '700',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  errorIcon: {
+    fontSize: 14,
+    marginTop: 1,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#DC2626',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  successIcon: {
+    fontSize: 14,
+    marginTop: 1,
+  },
+  successText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#16A34A',
+    fontWeight: '600',
+    lineHeight: 18,
   },
   inputGroup: {
     gap: 6,
@@ -393,7 +417,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: 2,
     shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.28,
@@ -405,33 +429,59 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
-  toggleRow: {
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 6,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.6,
+  },
+  socialRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 18,
+    gap: 12,
   },
-  toggleText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
+  socialIconBtn: {
+    flex: 1,
+    height: 48,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  toggleLink: {
-    fontSize: 14,
-    color: '#6366F1',
-    fontWeight: '700',
+  socialEmoji: {
+    fontSize: 20,
+    color: '#0F172A',
+  },
+  googleEmoji: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#4285F4',
   },
   guestBtn: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 18,
     paddingVertical: 8,
   },
   guestBtnText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#6366F1',
     fontWeight: '600',
   },
 });

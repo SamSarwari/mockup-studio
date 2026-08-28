@@ -8,10 +8,7 @@ import {
   Switch,
   StatusBar,
   TouchableOpacity,
-  TextInput,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
   useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,14 +17,12 @@ import { BackgroundPicker } from '../components/BackgroundPicker';
 import { ChassisPicker } from '../components/ChassisPicker';
 import { ScreenshotPicker } from '../components/ScreenshotPicker';
 import { ExportButton } from '../components/ExportButton';
-import { PresetList } from '../components/PresetList';
 import { AuthScreen } from './AuthScreen';
 import { DEFAULT_DEVICE } from '../config/devices';
 import { DEFAULT_BACKGROUND } from '../utils/colors';
 import { DEFAULT_CHASSIS_COLOR } from '../utils/chassisColors';
 import { ScreenshotInfo, ChassisColor } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { useSavePreset } from '../hooks/usePresets';
 
 // Fixed 9:16 export canvas — 540 pts × 3× = 1620 × 2880 px (crisp Ultra-HD)
 const EXPORT_W = 540;
@@ -41,7 +36,6 @@ const STORAGE_KEY_ISLAND = 'MOCKUP_STUDIO_PREF_ISLAND';
 export const MockupScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const { user, signOut } = useAuth();
-  const savePreset = useSavePreset();
 
   const exportCanvasRef = useRef<View>(null);
 
@@ -55,9 +49,6 @@ export const MockupScreen: React.FC = () => {
   const device = DEFAULT_DEVICE;
   const isTransparent = backgroundColor === 'transparent';
   const previewCanvasHeight = Math.min(540, Math.max(380, Math.floor(height * 0.52)));
-
-  const [isSavingPreset, setIsSavingPreset] = useState(false);
-  const [presetNameInput, setPresetNameInput] = useState('');
 
   // 1. Load saved preferences from AsyncStorage on startup
   useEffect(() => {
@@ -112,32 +103,6 @@ export const MockupScreen: React.FC = () => {
     setLoading(false);
   }, []);
 
-  const handleApplyPreset = useCallback((preset: {
-    chassisColor: ChassisColor;
-    backgroundColor: string;
-    showDynamicIsland: boolean;
-  }) => {
-    handleChassisChange(preset.chassisColor);
-    handleBackgroundChange(preset.backgroundColor);
-    handleToggleDynamicIsland(preset.showDynamicIsland);
-  }, []);
-
-  const handleOpenSavePreset = () => {
-    setPresetNameInput(`${chassisColor.name} · ${isTransparent ? 'Transparent' : backgroundColor}`);
-    setIsSavingPreset(true);
-  };
-
-  const handleConfirmSavePreset = () => {
-    if (!presetNameInput.trim()) return;
-    savePreset.mutate({
-      name: presetNameInput.trim(),
-      chassisColor,
-      backgroundColor,
-      showDynamicIsland,
-    });
-    setIsSavingPreset(false);
-  };
-
   const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || null;
 
   return (
@@ -163,51 +128,6 @@ export const MockupScreen: React.FC = () => {
           </View>
           <AuthScreen />
         </SafeAreaView>
-      </Modal>
-
-      {/* Save Preset Modal */}
-      <Modal
-        visible={isSavingPreset}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsSavingPreset(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Preset speichern</Text>
-            <Text style={styles.modalSubtitle}>
-              Gib einen Namen für deine aktuelle Mockup-Konfiguration ein:
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              value={presetNameInput}
-              onChangeText={setPresetNameInput}
-              placeholder="z.B. Mein YouTube Preset"
-              placeholderTextColor="#94A3B8"
-              autoFocus
-              selectTextOnFocus
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setIsSavingPreset(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.modalCancelText}>Abbrechen</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalSaveBtn}
-                onPress={handleConfirmSavePreset}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.modalSaveText}>Speichern</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Hidden 9:16 Ultra-HD Export Canvas (off-screen compositor) ── */}
@@ -312,20 +232,17 @@ export const MockupScreen: React.FC = () => {
 
             <View style={styles.divider} />
 
-            {/* 2. Saved Presets */}
-            <PresetList onApply={handleApplyPreset} />
-
-            {/* 3. iPhone Finish Color */}
+            {/* 2. iPhone Finish Color */}
             <ChassisPicker selected={chassisColor} onChange={handleChassisChange} />
 
             <View style={styles.divider} />
 
-            {/* 4. Background Swatches */}
+            {/* 3. Background Swatches */}
             <BackgroundPicker selectedColor={backgroundColor} onColorChange={handleBackgroundChange} />
 
             <View style={styles.divider} />
 
-            {/* 5. Dynamic Island Toggle */}
+            {/* 4. Dynamic Island Toggle */}
             <View style={styles.toggleRow}>
               <View style={styles.toggleTexts}>
                 <Text style={styles.toggleLabel}>Dynamic Island</Text>
@@ -342,19 +259,7 @@ export const MockupScreen: React.FC = () => {
 
             <View style={styles.divider} />
 
-            {/* 6. Save Preset */}
-            <TouchableOpacity
-              style={styles.savePresetBtn}
-              onPress={handleOpenSavePreset}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.savePresetIcon}>💾</Text>
-              <Text style={styles.savePresetText}>Einstellungen als Preset speichern</Text>
-            </TouchableOpacity>
-
-            <View style={styles.divider} />
-
-            {/* 7. Ultra-HD Export Button */}
+            {/* 5. Ultra-HD Export Button */}
             <ExportButton
               screenshot={screenshot}
               device={device}
@@ -591,106 +496,11 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
-  savePresetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  savePresetIcon: {
-    fontSize: 16,
-  },
-  savePresetText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-  },
   hint: {
     textAlign: 'center',
     color: '#94A3B8',
     fontSize: 12,
     marginTop: 10,
     fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 380,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: 22,
-    paddingVertical: 24,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.4,
-    marginBottom: 6,
-  },
-  modalSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  modalInput: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#0F172A',
-    fontWeight: '500',
-    marginBottom: 20,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'flex-end',
-  },
-  modalCancelBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  modalSaveBtn: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  modalSaveText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
   },
 });

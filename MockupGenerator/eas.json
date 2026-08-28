@@ -39,7 +39,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "[YOUR EMAIL]"
+        "appleId": "samprogrammiert@gmail.com",
+        "appleTeamId": "66GZ2B24DC"
       },
       "android": {
         "serviceAccountKeyPath": "./google-services-key.json",

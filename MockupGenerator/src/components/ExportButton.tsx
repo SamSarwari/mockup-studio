@@ -7,13 +7,15 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { ScreenshotInfo, DeviceConfig } from '../types';
+import { ScreenshotInfo, DeviceConfig, ChassisColor } from '../types';
 import { exportMockupAsPng, saveToGallery, shareImage } from '../services/exportService';
+import { useLogExport } from '../hooks/useExportHistory';
 
 interface ExportButtonProps {
   screenshot: ScreenshotInfo | null;
   device: DeviceConfig;
   backgroundColor: string;
+  chassisColor?: ChassisColor;
   showDynamicIsland: boolean;
   viewRef?: any;
 }
@@ -22,11 +24,13 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   screenshot,
   device,
   backgroundColor,
+  chassisColor,
   showDynamicIsland,
   viewRef,
 }) => {
   const [exporting, setExporting] = React.useState(false);
   const isTransparent = backgroundColor === 'transparent';
+  const logExport = useLogExport();
 
   const handleExport = async () => {
     if (!screenshot) {
@@ -43,6 +47,17 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         showDynamicIsland,
         viewRef,
       });
+
+      // Silently log export in background
+      try {
+        logExport.mutate({
+          chassisColorName: chassisColor?.name || 'Space Black',
+          backgroundColor,
+          showDynamicIsland,
+        });
+      } catch {
+        // Non-blocking
+      }
 
       const actions = [
         {

@@ -13,7 +13,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 export const AuthScreen: React.FC = () => {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, continueAsGuest } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -130,6 +130,15 @@ export const AuthScreen: React.FC = () => {
           <Text style={styles.toggleLink}>
             {isSignUp ? 'Anmelden' : 'Registrieren'}
           </Text>
+        </TouchableOpacity>
+
+        {/* Guest Mode */}
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={continueAsGuest}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.guestBtnText}>Als Gast fortfahren →</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -250,5 +259,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6366F1',
     fontWeight: '700',
+  },
+  guestBtn: {
+    alignItems: 'center',
+    marginTop: 18,
+    paddingVertical: 10,
+  },
+  guestBtnText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontWeight: '600',
   },
 });

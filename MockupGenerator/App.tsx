@@ -7,7 +7,7 @@ import { AuthScreen } from './src/screens/AuthScreen';
 import { MockupScreen } from './src/screens/MockupScreen';
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { session, isGuest, loading } = useAuth();
 
   if (loading) {
     return (
@@ -18,7 +18,7 @@ function RootNavigator() {
     );
   }
 
-  return session ? <MockupScreen /> : <AuthScreen />;
+  return (session || isGuest) ? <MockupScreen /> : <AuthScreen />;
 }
 
 export default function App() {

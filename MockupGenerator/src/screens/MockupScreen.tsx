@@ -8,6 +8,7 @@ import {
   Switch,
   StatusBar,
   TouchableOpacity,
+  Alert,
   TextInput,
   Modal,
   KeyboardAvoidingView,
@@ -69,6 +70,17 @@ export const MockupScreen: React.FC = () => {
   }, []);
 
   const handleOpenSavePreset = () => {
+    if (!user) {
+      Alert.alert(
+        'Anmeldung erforderlich',
+        'Erstelle ein kostenloses Konto oder melde dich an, um Presets in der Cloud zu speichern.',
+        [
+          { text: 'Später', style: 'cancel' },
+          { text: 'Anmelden', onPress: signOut },
+        ]
+      );
+      return;
+    }
     setPresetNameInput(`${chassisColor.name} · ${isTransparent ? 'Transparent' : backgroundColor}`);
     setIsSavingPreset(true);
   };

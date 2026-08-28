@@ -10,16 +10,16 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useAuth, OAuthProvider } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export const AuthScreen: React.FC = () => {
-  const { signIn, signUp, signInWithOAuth, continueAsGuest } = useAuth();
+  const { signIn, signUp, resetPassword, continueAsGuest } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<OAuthProvider | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -63,16 +63,23 @@ export const AuthScreen: React.FC = () => {
     }
   };
 
-  const handleSocialAuth = async (provider: OAuthProvider) => {
+  const handleForgotPassword = async () => {
     setErrorMessage(null);
     setSuccessMessage(null);
-    setSocialLoading(provider);
+
+    if (!email.trim()) {
+      setErrorMessage('Bitte gib oben deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen.');
+      return;
+    }
+
+    setResetLoading(true);
     try {
-      await signInWithOAuth(provider);
+      await resetPassword(email.trim());
+      setSuccessMessage(`Ein Link zum Zurücksetzen deines Passworts wurde an ${email.trim()} gesendet! ✉️`);
     } catch (err: any) {
-      setErrorMessage(err?.message || `${provider.toUpperCase()} Anmeldung fehlgeschlagen.`);
+      setErrorMessage(err?.message || 'Fehler beim Zurücksetzen des Passworts.');
     } finally {
-      setSocialLoading(null);
+      setResetLoading(false);
     }
   };
 
@@ -92,7 +99,7 @@ export const AuthScreen: React.FC = () => {
           </View>
           <Text style={styles.title}>Mockup Studio</Text>
           <Text style={styles.subtitle}>
-            Melde dich an, um Mockups & Einstellungen zu synchronisieren
+            Melde dich mit deiner E-Mail an oder fahre als Gast fort
           </Text>
         </View>
 
@@ -175,7 +182,20 @@ export const AuthScreen: React.FC = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Passwort</Text>
+            <View style={styles.passwordLabelRow}>
+              <Text style={styles.inputLabel}>Passwort</Text>
+              {!isSignUp && (
+                <TouchableOpacity
+                  onPress={handleForgotPassword}
+                  disabled={resetLoading}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.forgotPasswordText}>
+                    {resetLoading ? 'Wird gesendet...' : 'Passwort vergessen?'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <TextInput
               style={styles.input}
               placeholder={isSignUp ? 'Mindestens 6 Zeichen' : '••••••••'}
@@ -202,48 +222,6 @@ export const AuthScreen: React.FC = () => {
               </Text>
             )}
           </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ODER MIT SOCIAL LOGIN</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social Logins (Apple & Google) */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={styles.socialBtn}
-              onPress={() => handleSocialAuth('apple')}
-              disabled={socialLoading !== null || loading}
-              activeOpacity={0.8}
-            >
-              {socialLoading === 'apple' ? (
-                <ActivityIndicator color="#0F172A" size="small" />
-              ) : (
-                <View style={styles.socialBtnContent}>
-                  <Text style={styles.socialEmoji}></Text>
-                  <Text style={styles.socialBtnLabel}>Apple</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialBtn}
-              onPress={() => handleSocialAuth('google')}
-              disabled={socialLoading !== null || loading}
-              activeOpacity={0.8}
-            >
-              {socialLoading === 'google' ? (
-                <ActivityIndicator color="#4285F4" size="small" />
-              ) : (
-                <View style={styles.socialBtnContent}>
-                  <Text style={styles.googleEmoji}>G</Text>
-                  <Text style={styles.socialBtnLabel}>Google</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Guest Mode */}
@@ -399,6 +377,16 @@ const styles = StyleSheet.create({
   inputGroup: {
     gap: 6,
   },
+  passwordLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    fontSize: 12,
+    color: '#6366F1',
+    fontWeight: '600',
+  },
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
@@ -437,57 +425,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: -0.2,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 6,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E2E8F0',
-  },
-  dividerText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.6,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  socialBtn: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialBtnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  socialEmoji: {
-    fontSize: 18,
-    color: '#0F172A',
-  },
-  googleEmoji: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#4285F4',
-  },
-  socialBtnLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
   },
   guestBtn: {
     alignItems: 'center',

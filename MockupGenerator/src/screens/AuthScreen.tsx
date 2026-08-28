@@ -70,7 +70,7 @@ export const AuthScreen: React.FC = () => {
     try {
       await signInWithOAuth(provider);
     } catch (err: any) {
-      setErrorMessage(`${provider.toUpperCase()} Anmeldung fehlgeschlagen: ${err?.message || err}`);
+      setErrorMessage(err?.message || `${provider.toUpperCase()} Anmeldung fehlgeschlagen.`);
     } finally {
       setSocialLoading(null);
     }
@@ -92,7 +92,7 @@ export const AuthScreen: React.FC = () => {
           </View>
           <Text style={styles.title}>Mockup Studio</Text>
           <Text style={styles.subtitle}>
-            Melde dich an, um Mockup-Presets & Export-Historie zu speichern
+            Melde dich an, um Mockups & Einstellungen zu synchronisieren
           </Text>
         </View>
 
@@ -210,33 +210,38 @@ export const AuthScreen: React.FC = () => {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Social Logins */}
+          {/* Social Logins (Apple & Google) */}
           <View style={styles.socialRow}>
             <TouchableOpacity
-              style={styles.socialIconBtn}
+              style={styles.socialBtn}
               onPress={() => handleSocialAuth('apple')}
               disabled={socialLoading !== null || loading}
               activeOpacity={0.8}
             >
-              <Text style={styles.socialEmoji}></Text>
+              {socialLoading === 'apple' ? (
+                <ActivityIndicator color="#0F172A" size="small" />
+              ) : (
+                <View style={styles.socialBtnContent}>
+                  <Text style={styles.socialEmoji}></Text>
+                  <Text style={styles.socialBtnLabel}>Apple</Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.socialIconBtn}
+              style={styles.socialBtn}
               onPress={() => handleSocialAuth('google')}
               disabled={socialLoading !== null || loading}
               activeOpacity={0.8}
             >
-              <Text style={styles.googleEmoji}>G</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialIconBtn}
-              onPress={() => handleSocialAuth('github')}
-              disabled={socialLoading !== null || loading}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.socialEmoji}>🐙</Text>
+              {socialLoading === 'google' ? (
+                <ActivityIndicator color="#4285F4" size="small" />
+              ) : (
+                <View style={styles.socialBtnContent}>
+                  <Text style={styles.googleEmoji}>G</Text>
+                  <Text style={styles.socialBtnLabel}>Google</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -455,7 +460,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  socialIconBtn: {
+  socialBtn: {
     flex: 1,
     height: 48,
     backgroundColor: '#F8FAFC',
@@ -465,14 +470,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  socialBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   socialEmoji: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#0F172A',
   },
   googleEmoji: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: '#4285F4',
+  },
+  socialBtnLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#334155',
   },
   guestBtn: {
     alignItems: 'center',

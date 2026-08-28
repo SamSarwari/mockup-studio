@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
 
-export type OAuthProvider = 'google' | 'apple' | 'github';
+export type OAuthProvider = 'google' | 'apple';
 
 interface AuthContextType {
   session: Session | null;
@@ -64,6 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const formatAuthError = (err: any): string => {
     const msg = err?.message || String(err);
+    if (msg.includes('Unsupported provider') || msg.includes('provider is not enabled')) {
+      return 'Dieser Login-Dienst ist in deinem Supabase Dashboard noch nicht aktiviert. Bitte melde dich über E-Mail & Passwort an oder aktiviere den Anbieter unter Authentication ➔ Providers in Supabase.';
+    }
     if (msg.includes('Invalid login credentials')) {
       return 'E-Mail oder Passwort ist nicht korrekt.';
     }
@@ -152,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       const friendlyMsg = formatAuthError(err);
       Alert.alert(`${provider.toUpperCase()} Anmeldung`, friendlyMsg);
+      throw new Error(friendlyMsg);
     }
   }, []);
 

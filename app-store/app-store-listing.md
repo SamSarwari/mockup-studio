@@ -76,25 +76,22 @@ mockup,iphone,screenshot,generator,design,frame,präsentation,retina,titan,figma
 
 ### 5. Notizen für die App-Prüfung (App Review Notes)
 ```text
-Hinweise für den Apple-Prüfer:
+Hinweise für den Apple-Prüfer / App Review Information:
 
-Gast-Modus / Demo-Account:
-Die App kann vollständig ohne Registrierung getestet werden. Tippen Sie auf dem Startbildschirm einfach auf:
-"Ohne Anmeldung als Gast fortfahren".
+No Login Required / 100% Free & Open:
+The app does not require any account creation, login, or authentication. All features are immediately and completely accessible upon launch with zero setup or configuration required.
 
-Falls Sie die synchronisierte Account-Funktion testen möchten:
-E-Mail: demo-reviewer@mockupstudio.app
-Passwort: DemoPassword2026!
+Core feature walkthrough:
+1. Tap "Screenshot auswählen" or the device screen area to select a screenshot from your photo library.
+2. Tap "Titan-Gehäuse" to switch between the 8 authentic titanium chassis finishes.
+3. Tap "Hintergrund" to select curated pastel colors or toggle the transparent PNG export mode.
+4. Toggle "Dynamic Island" on or off via the switch.
+5. Tap "Ultra-HD PNG exportieren" to export the final 1620×2880 px mockup directly to the iOS photo library or share sheet.
+6. Tap the "❤️ Über & Support" button in the header to view project information, privacy details, and creator notes.
 
-Schritte zum Testen der Kernfunktionen:
-1. Tippen Sie auf den Bildschirm-Bereich des iPhones, um einen Screenshot aus der Mediathek auszuwählen.
-2. Tippen Sie auf "Titan-Gehäuse", um zwischen den 8 Titan-Farben zu wechseln.
-3. Tippen Sie auf "Hintergrund", um Pastellfarben auszuwählen oder auf den transparenten Modus umzuschalten.
-4. Schalten Sie die Dynamic Island über den Schalter ein oder aus.
-5. Tippen Sie auf "Mockup exportieren", um das fertige 1620x2880 PNG in voller Retina-Auflösung in Fotos zu speichern oder zu teilen.
-
-Berechtigungen:
-- Fotomediathek: Wird ausschließlich lokal genutzt, um Screenshots einzufügen und das generierte Mockup auf dem Gerät zu speichern. Es findet keinerlei Server-Upload statt.
+Permissions:
+- Photo Library (Read): Used 100% locally on-device to select screenshots for mockups. No images are uploaded to any server.
+- Photo Library (Write): Used to save the generated Ultra-HD PNG mockup to the user's photo library.
 ```
 
 ---

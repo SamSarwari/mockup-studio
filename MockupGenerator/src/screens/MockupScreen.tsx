@@ -8,7 +8,6 @@ import {
   Switch,
   StatusBar,
   TouchableOpacity,
-  Modal,
   useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,12 +16,11 @@ import { BackgroundPicker } from '../components/BackgroundPicker';
 import { ChassisPicker } from '../components/ChassisPicker';
 import { ScreenshotPicker } from '../components/ScreenshotPicker';
 import { ExportButton } from '../components/ExportButton';
-import { AuthScreen } from './AuthScreen';
+import { WelcomeModal } from '../components/WelcomeModal';
 import { DEFAULT_DEVICE } from '../config/devices';
 import { DEFAULT_BACKGROUND } from '../utils/colors';
 import { DEFAULT_CHASSIS_COLOR } from '../utils/chassisColors';
 import { ScreenshotInfo, ChassisColor } from '../types';
-import { useAuth } from '../contexts/AuthContext';
 
 // Fixed 9:16 export canvas — 540 pts × 3× = 1620 × 2880 px (crisp Ultra-HD)
 const EXPORT_W = 540;
@@ -32,10 +30,10 @@ const EXPORT_PADDING = 70;
 const STORAGE_KEY_BG = 'MOCKUP_STUDIO_PREF_BG';
 const STORAGE_KEY_CHASSIS = 'MOCKUP_STUDIO_PREF_CHASSIS';
 const STORAGE_KEY_ISLAND = 'MOCKUP_STUDIO_PREF_ISLAND';
+const STORAGE_KEY_WELCOME = 'MOCKUP_STUDIO_HAS_SEEN_WELCOME';
 
 export const MockupScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
-  const { user, signOut } = useAuth();
 
   const exportCanvasRef = useRef<View>(null);
 
@@ -44,7 +42,7 @@ export const MockupScreen: React.FC = () => {
   const [chassisColor, setChassisColor] = useState<ChassisColor>(DEFAULT_CHASSIS_COLOR);
   const [showDynamicIsland, setShowDynamicIsland] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [authModalVisible, setAuthModalVisible] = useState(false);
+  const [welcomeModalVisible, setWelcomeModalVisible] = useState(false);
 
   const device = DEFAULT_DEVICE;
   const isTransparent = backgroundColor === 'transparent';
@@ -54,10 +52,11 @@ export const MockupScreen: React.FC = () => {
   useEffect(() => {
     async function loadSavedPreferences() {
       try {
-        const [savedBg, savedChassis, savedIsland] = await Promise.all([
+        const [savedBg, savedChassis, savedIsland, hasSeenWelcome] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEY_BG),
           AsyncStorage.getItem(STORAGE_KEY_CHASSIS),
           AsyncStorage.getItem(STORAGE_KEY_ISLAND),
+          AsyncStorage.getItem(STORAGE_KEY_WELCOME),
         ]);
 
         if (savedBg) {
@@ -73,6 +72,10 @@ export const MockupScreen: React.FC = () => {
             setShowDynamicIsland(JSON.parse(savedIsland));
           } catch {}
         }
+        // Show welcome screen on first launch
+        if (!hasSeenWelcome) {
+          setWelcomeModalVisible(true);
+        }
       } catch (err) {
         console.warn('Could not load user preferences:', err);
       }
@@ -80,6 +83,11 @@ export const MockupScreen: React.FC = () => {
 
     loadSavedPreferences();
   }, []);
+
+  const handleCloseWelcome = () => {
+    setWelcomeModalVisible(false);
+    AsyncStorage.setItem(STORAGE_KEY_WELCOME, 'true').catch(() => {});
+  };
 
   // 2. Persistent preference setters
   const handleBackgroundChange = (color: string) => {
@@ -103,32 +111,15 @@ export const MockupScreen: React.FC = () => {
     setLoading(false);
   }, []);
 
-  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || null;
-
   return (
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F9FD" />
 
-      {/* Auth Modal (Optional - when user taps profile) */}
-      <Modal
-        visible={authModalVisible && !user}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setAuthModalVisible(false)}
-      >
-        <SafeAreaView style={styles.modalRoot}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              style={styles.modalCloseBtn}
-              onPress={() => setAuthModalVisible(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.modalCloseText}>Schließen ✕</Text>
-            </TouchableOpacity>
-          </View>
-          <AuthScreen />
-        </SafeAreaView>
-      </Modal>
+      {/* Welcome & Support Modal */}
+      <WelcomeModal
+        visible={welcomeModalVisible}
+        onClose={handleCloseWelcome}
+      />
 
       {/* ── Hidden 9:16 Ultra-HD Export Canvas (off-screen compositor) ── */}
       <View
@@ -165,28 +156,16 @@ export const MockupScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* User Account / Profile Button */}
-              {user ? (
-                <TouchableOpacity
-                  style={styles.userChip}
-                  onPress={signOut}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.userAvatar}>
-                    <Text style={styles.userAvatarText}>
-                      {displayName ? displayName.charAt(0).toUpperCase() : '✓'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.loginChip}
-                  onPress={() => setAuthModalVisible(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.loginChipText}>👤 Anmelden</Text>
-                </TouchableOpacity>
-              )}
+              {/* Info / Support Button */}
+              <TouchableOpacity
+                style={styles.supportChip}
+                onPress={() => setWelcomeModalVisible(true)}
+                activeOpacity={0.8}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.supportChipEmoji}>❤️</Text>
+                <Text style={styles.supportChipText}>Über & Support</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.headerSubtitle}>
               {device.name} · {chassisColor.name}
@@ -293,26 +272,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 48,
   },
-  modalRoot: {
-    flex: 1,
-    backgroundColor: '#F8F9FD',
-  },
-  modalHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    alignItems: 'flex-end',
-  },
-  modalCloseBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 14,
-  },
-  modalCloseText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#64748B',
-  },
   exportWrapper: {
     position: 'absolute',
     top: 0,
@@ -353,33 +312,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  userChip: {
-    padding: 2,
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#6366F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userAvatarText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  loginChip: {
-    backgroundColor: '#EEF2FF',
+  supportChip: {
+    backgroundColor: '#FAF5FF',
+    borderColor: '#E9D5FF',
+    borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
-  loginChipText: {
-    color: '#6366F1',
+  supportChipEmoji: {
     fontSize: 13,
+  },
+  supportChipText: {
+    color: '#7C3AED',
+    fontSize: 12,
     fontWeight: '700',
   },
   headerSubtitle: {

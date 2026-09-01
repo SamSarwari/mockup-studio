@@ -156,15 +156,15 @@ export const MockupScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Info / Support Button */}
+              {/* Info / About Button */}
               <TouchableOpacity
                 style={styles.supportChip}
                 onPress={() => setWelcomeModalVisible(true)}
                 activeOpacity={0.8}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Text style={styles.supportChipEmoji}>❤️</Text>
-                <Text style={styles.supportChipText}>Über & Support</Text>
+                <Text style={styles.supportChipEmoji}>✨</Text>
+                <Text style={styles.supportChipText}>Über die App</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.headerSubtitle}>

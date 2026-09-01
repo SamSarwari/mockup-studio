@@ -15,18 +15,9 @@ interface WelcomeModalProps {
   onClose: () => void;
 }
 
-const PAYPAL_POOL_URL = 'https://www.paypal.com/pool/9sgq2cTgeE?sr=wccr';
 const SUPPORT_EMAIL = 'te3sam@gmail.com';
 
 export const WelcomeModal: React.FC<WelcomeModalProps> = ({ visible, onClose }) => {
-  const handleOpenPayPal = async () => {
-    try {
-      await Linking.openURL(PAYPAL_POOL_URL);
-    } catch (err) {
-      console.warn('Could not open PayPal URL:', err);
-    }
-  };
-
   const handleContactEmail = () => {
     Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Feedback%20zu%20Mockup%20Studio`).catch(() => {});
   };
@@ -108,35 +99,27 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ visible, onClose }) 
             </View>
           </View>
 
-          {/* Creator & Support Message */}
+          {/* Creator & Community Message */}
           <View style={styles.supportCard}>
             <View style={styles.supportHeader}>
-              <Text style={styles.supportEmoji}>❤️</Text>
+              <Text style={styles.supportEmoji}>✨</Text>
               <Text style={styles.supportTitle}>Ein Projekt von Samiullah</Text>
             </View>
             <Text style={styles.supportText}>
-              Ich baue kostenlose, einfache Tools für Creator, Designer und Entwickler. Mockup Studio ist und bleibt für immer komplett kostenlos und werbefrei.
+              Ich baue nützliche, schnelle Tools für Creator, Designer und Entwickler. Mockup Studio ist und bleibt für immer komplett kostenlos und ohne störende Werbung.
             </Text>
             <Text style={styles.supportTextSub}>
-              Wenn dir die App gefällt und du meine Arbeit an weiteren kostenlosen Projekten unterstützen möchtest, freue ich mich riesig über deine Unterstützung:
+              Hast du Wünsche, Ideen für neue Geräte-Rahmen oder Feedback? Lass es mich gerne wissen!
             </Text>
 
-            {/* PayPal Button */}
+            {/* Email Feedback Button */}
             <TouchableOpacity
-              style={styles.paypalButton}
-              onPress={handleOpenPayPal}
+              style={styles.feedbackButton}
+              onPress={handleContactEmail}
               activeOpacity={0.85}
             >
-              <Text style={styles.paypalButtonIcon}>☕</Text>
-              <Text style={styles.paypalButtonText}>Projekt auf PayPal unterstützen</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Feedback & Contact */}
-          <View style={styles.contactRow}>
-            <Text style={styles.contactLabel}>Ideen oder Feedback?</Text>
-            <TouchableOpacity onPress={handleContactEmail} activeOpacity={0.7}>
-              <Text style={styles.contactLink}>{SUPPORT_EMAIL}</Text>
+              <Text style={styles.feedbackButtonIcon}>✉️</Text>
+              <Text style={styles.feedbackButtonText}>Ideen & Feedback senden</Text>
             </TouchableOpacity>
           </View>
 
@@ -278,12 +261,12 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   supportCard: {
-    backgroundColor: '#FAF5FF',
-    borderColor: '#E9D5FF',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
     borderWidth: 1,
     borderRadius: 20,
     padding: 18,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   supportHeader: {
     flexDirection: 'row',
@@ -297,57 +280,42 @@ const styles = StyleSheet.create({
   supportTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#6B21A8',
+    color: '#0F172A',
   },
   supportText: {
     fontSize: 13,
-    color: '#4C1D95',
+    color: '#334155',
     lineHeight: 19,
     marginBottom: 6,
   },
   supportTextSub: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
     lineHeight: 18,
     marginBottom: 14,
   },
-  paypalButton: {
-    backgroundColor: '#0070BA',
+  feedbackButton: {
+    backgroundColor: '#4F46E5',
     borderRadius: 14,
     paddingVertical: 13,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0070BA',
+    shadowColor: '#4F46E5',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 3,
   },
-  paypalButtonIcon: {
+  feedbackButtonIcon: {
     fontSize: 16,
     marginRight: 8,
   },
-  paypalButtonText: {
+  feedbackButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
-  },
-  contactRow: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  contactLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 2,
-  },
-  contactLink: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4F46E5',
-    textDecorationLine: 'underline',
   },
   ctaButton: {
     backgroundColor: '#111827',

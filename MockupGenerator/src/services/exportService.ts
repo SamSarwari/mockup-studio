@@ -37,7 +37,7 @@ export async function exportMockupAsPng(options: ExportOptions): Promise<string>
 }
 
 export async function saveToGallery(uri: string): Promise<boolean> {
-  const { status } = await MediaLibrary.requestPermissionsAsync();
+  const { status } = await MediaLibrary.requestPermissionsAsync(true);
   if (status !== 'granted') return false;
   await MediaLibrary.saveToLibraryAsync(uri);
   return true;

@@ -12,11 +12,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#070D1A"
     },
+    "locales": {
+      "de": "./locales/de.json",
+      "en": "./locales/en.json"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mockupgenerator.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Select screenshots and images from your photo library to display inside device frames and create mockups.",
+        "NSPhotoLibraryAddUsageDescription": "Save your generated device mockups directly to your photo library."
       }
     },
     "android": {
@@ -44,15 +50,17 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Mockup Studio to access your photos.",
-          "savePhotosPermission": "Allow Mockup Studio to save generated mockups to your photo library.",
+          "photosPermission": "Select screenshots and images from your photo library to display inside device frames and create mockups.",
+          "savePhotosPermission": "Save your generated device mockups directly to your photo library.",
           "isAccessMediaLocationEnabled": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Mockup Studio to access your photos to select screenshots for mockups."
+          "photosPermission": "Select screenshots and images from your photo library to display inside device frames and create mockups.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ],

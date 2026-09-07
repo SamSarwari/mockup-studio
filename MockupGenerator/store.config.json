@@ -1,0 +1,84 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0",
+    "copyright": "2026 Mockup Studio",
+    "release": {
+      "automaticRelease": true
+    },
+    "info": {
+      "de-DE": {
+        "description": "Mockup Studio ist der schnellste und präziseste iPhone-Mockup-Generator für Designer, Entwickler, Marketer und Creator.\n\nVerwandle deine Screenshots und App-Designs mit nur wenigen Fingertipps in atemberaubende, studio-reife iPhone 17 Pro Max Präsentationen.\n\nPRÄZISE HARDWARE-DETAILS\n• Symmetrische, perfekt ausbalancierte 10 pt Titan-Ränder mit maßstabsgetreuer Geometrie.\n• Konzentrische Eckenradien, die exakt der echten Hardware entsprechen.\n• Authentische Dynamic Island mit subtiler, realistischer Kameralinsen-Reflexion.\n• Detaillierte Hardware-Elemente: Action Button, Lautstärketasten, Power-Button und Camera Control.\n\n8 PREMIUM TITAN-FINISHES\n• Space Schwarz (Space Black)\n• Titan Natur (Natural Titanium)\n• Titan Weiß (White Titanium)\n• Titan Wüste (Desert Titanium)\n• Tiefblau (Deep Blue)\n• Mitternachtsgrün (Midnight Green)\n• Roségold (Rose Gold)\n• Klassisches Silber (Silver)\n\nKURATIERTE STUDIO-FARBEN & TRANSPARENZ\n• Ästhetische Pastell-Farbpaletten: Zartes Lavendel, Salbeigrün, Puderrosa, Warmes Pfirsich, Eisblau, Buttercreme, Schiefergrau und mehr.\n• Eigener Hex-Farbwähler für exaktes Corporate-Design-Matching (#RRGGBB).\n• 100% transparenter PNG-Export: Isolierter Alpha-Kanal mit automatischer Hintergrund- und Schattenunterdrückung – ideal für Photoshop, Figma, Canva, Keynote und Marketing-Decks.\n\nULTRA-HD RETINA EXPORT\n• Gestochen scharfes 9:16 Format mit 3x Retina-Auflösung (1620 x 2880 px).\n• Direkte Anbindung an den iOS-Fotodialog zur sekundenschnellen Screenshot-Auswahl.\n• Direktes Speichern in deiner Fotos-Mediathek oder Weitergabe über das iOS Share Sheet (AirDrop, Nachrichten, Dateien).\n\n100% PRIVAT & LOKAL AUF DEINEM GERÄT\n• Sämtliches Rendering und Compositing finden vollständig lokal auf deinem Gerät statt.\n• Deine Fotos und Screenshots werden niemals auf externe Server oder an KI-Modelle übertragen.\n• Funktioniert komplett offline ohne Ladezeiten.",
+        "keywords": [
+          "mockup",
+          "iphone",
+          "screenshot",
+          "generator",
+          "design",
+          "frame",
+          "präsentation",
+          "retina",
+          "titan",
+          "figma",
+          "canva",
+          "export",
+          "studio"
+        ],
+        "marketingUrl": "https://hi-handy.de/mockupstudio/",
+        "promoText": "Erstelle ultrahochauflösende iPhone 17 Pro Max Mockups in Sekunden. Wähle aus 8 Titan-Finishes, soften Pastellfarben und exportiere gestochen scharfe transparente PNGs.",
+        "supportUrl": "https://hi-handy.de/mockupstudio/support.html",
+        "title": "Mockup Studio: Geräte-Rahmen",
+        "privacyPolicyUrl": "https://hi-handy.de/mockupstudio/privacy.html",
+        "screenshots": {
+          "APP_IPHONE_65": [
+            "store/apple/screenshot/de-DE/APP_IPHONE_65/1.png",
+            "store/apple/screenshot/de-DE/APP_IPHONE_65/3.png",
+            "store/apple/screenshot/de-DE/APP_IPHONE_65/2.png",
+            "store/apple/screenshot/de-DE/APP_IPHONE_65/4.png"
+          ]
+        }
+      }
+    },
+    "categories": [
+      "GRAPHICS_AND_DESIGN",
+      "PRODUCTIVITY"
+    ],
+    "advisory": {
+      "ageRatingOverride": "NONE",
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "kidsAgeBand": null,
+      "koreaAgeRatingOverride": "NONE",
+      "lootBox": false,
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "advertising": false,
+      "ageAssurance": false,
+      "ageRatingOverrideV2": "NONE",
+      "developerAgeRatingInfoUrl": null,
+      "gunsOrOtherWeapons": "NONE",
+      "healthOrWellnessTopics": false,
+      "messagingAndChat": false,
+      "parentalControls": false,
+      "userGeneratedContent": false
+    },
+    "review": {
+      "firstName": "Samiullah",
+      "lastName": "Sarwari",
+      "email": "Kontakt@hi-handy.de",
+      "phone": "+4915216603172",
+      "demoRequired": false,
+      "notes": "Hinweise für den Apple-Prüfer:\nDie App kann direkt ohne Registrierung über den Button \"Ohne Anmeldung als Gast fortfahren\" getestet werden.\n\nFunktionen:\n1. Auf den Geräterahmen tippen -> Screenshot aus Mediathek wählen.\n2. \"Titan-Gehäuse\" -> Wechsel zwischen 8 Titanfarben.\n3. \"Hintergrund\" -> Pastellfarben oder transparenter PNG-Modus.\n4. \"Mockup exportieren\" -> Speichert das 1620x2880 PNG lokal in Fotos.\n\nAlle Bilddaten werden zu 100% lokal auf dem Gerät verarbeitet."
+    }
+  }
+}

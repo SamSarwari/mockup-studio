@@ -61,8 +61,6 @@ ULTRA-HD RETINA EXPORT
 • Sämtliches Rendering und Compositing finden vollständig lokal auf deinem Gerät statt.
 • Deine Fotos und Screenshots werden niemals auf externe Server oder an KI-Modelle übertragen.
 • Funktioniert komplett offline ohne Ladezeiten.
-
-Die optionale Cloud-Synchronisierung ermöglicht es dir, deine bevorzugten Mockup-Vorlagen und den Export-Verlauf sicher zu speichern.
 ```
 
 ---
@@ -115,11 +113,38 @@ Permissions:
 
 ## 📊 App-Datenschutz (App Store Connect Fragebogen)
 
+Die App erhebt keinerlei Daten ("Data Not Collected").
+
 | Datentyp | Erfasst? | Mit Nutzer verknüpft? | Für Tracking genutzt? | Zweck |
 | :--- | :--- | :--- | :--- | :--- |
-| **Kontaktinfo (E-Mail)** | Ja (Optional bei Registrierung) | Ja | **Nein** | App-Funktionalität / Authentifizierung |
-| **Benutzerinhalte (Fotos)** | **Nein** *(wird 100% lokal verarbeitet)* | Nein | **Nein** | Lokale Mockup-Erstellung |
-| **Identifikatoren (User ID)** | Ja (Optional) | Ja | **Nein** | App-Funktionalität (Supabase) |
-| **Diagnosedaten** | Nein | Nein | **Nein** | Keine |
-| **Standortdaten** | **Nein** | Nein | **Nein** | Keine |
-| **Tracking / Werbung** | **Nein** | Nein | **Nein** | Keine |
+| **Benutzerinhalte (Fotos)** | **Nein** *(100% lokale On-Device-Verarbeitung)* | Nein | Nein | Lokale Mockup-Erstellung |
+| **Kontaktinfo / Account** | **Nein** *(kein Konto erforderlich)* | Nein | Nein | Keine Erhebung |
+| **Identifikatoren** | **Nein** | Nein | Nein | Keine Erhebung |
+| **Diagnosedaten** | **Nein** | Nein | Nein | Keine Erhebung |
+| **Tracking / Werbung** | **Nein** | Nein | Nein | Keine Werbung |
+
+---
+
+## 📝 Antwort-Vorlage für Apple App Store Connect (Resolution Center)
+
+Folgenden Text kannst du direkt im App Store Connect Resolution Center als Antwort auf die Ablehnung senden:
+
+```text
+Dear Apple App Review Team,
+
+Thank you for your review and feedback regarding submission ID 7ebca1d1-209c-4da9-be87-d35efc2c22b5. We have addressed all three identified items:
+
+1. Guideline 4.1(a) - Copycats:
+We have revised our App Store screenshot metadata and completely removed the screenshot containing third-party branding (the WhatsApp-style graphic). A new, compliant screenshot showcasing genuine, neutral app interface content has been uploaded.
+
+2. Guideline 1.5 - Safety (Support URL):
+The Support URL (https://hi-handy.de/mockupstudio/support.html) is now fully active, functional, and accessible. It provides comprehensive FAQ answers, contact options, and customer service details for Mockup Studio.
+
+3. Guideline 2.3 - Accurate Metadata (Cloud Synchronization):
+We have removed the inadvertent reference to "optional cloud synchronization" from our app description and all metadata. Mockup Studio operates 100% locally and offline on the user's device with no cloud sync or account registration needed.
+
+Thank you for your time and for re-evaluating our submission.
+
+Best regards,
+Samiullah Sarwari
+```
